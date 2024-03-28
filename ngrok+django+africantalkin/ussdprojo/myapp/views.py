@@ -51,34 +51,51 @@ def ussd(request):
                     response += f"Account Details:\n"
                     response += f"User ID: {user.uid}\n"
                     response += f"Phone Number: {user.phone_number}\n"
-                    response += f"Balance: {account.balance}\n\n"
+                    response += f"Balance: {account.balance}\n"
+                    response += f"Loan Limit: {account.loan_limit}\n\n"
                 except Account.DoesNotExist:
                     # Create an account for the user if it doesn't exist
-                    random_balance = random.randint(100, 10000)
-                    account = Account.objects.create(user=user, balance=random_balance)
+                    account_balance = 1000  # Default account balance
+                    account_loan_limit = 1000  # Default loan limit
+                    account = Account.objects.create(user=user, balance=account_balance, loan_limit=account_loan_limit)
+                    account.save()
 
                     response = f"CON Account created successfully for {user.name}!\n\n"
                     response += f"Account Details:\n"
                     response += f"User ID: {user.uid}\n"
                     response += f"Phone Number: {user.phone_number}\n"
-                    response += f"Balance: {account.balance}\n\n"
+                    response += f"Balance: {account.balance}\n"
+                    response += f"Loan Limit: {account.loan_limit}\n\n"
 
-                # Add options for checking balance, loan limit, and requesting loan
+                # Add options for checking balance, loan limit, requesting loan, and business ideas
                 response += "Select an option:\n"
                 response += "1. Check Balance\n"
                 response += "2. Check Loan Limit\n"
-                response += "3. Request Loan\n"
+                response += "3. Business Ideas\n"
+                response += "4. Request Loan\n"
 
         elif text == '1':
             # Logic for checking balance
             account = Account.objects.get(user=user)
             response = f"END Your balance is ${account.balance}\n"
         elif text == '2':
-            # Logic for checking loan limit (5 times the balance)
-            account = Account.objects.get(user=user)
-            loan_limit = 5 * account.balance
-            response = f"END Your loan limit is ${loan_limit}\n"
+            # Logic for checking loan limit
+            try:
+                account = Account.objects.get(user=user)
+                loan_limit = account.loan_limit
+                response = f"END Your loan limit is ${loan_limit}\n"
+            except Account.DoesNotExist:
+                response = "END Account not found"
         elif text == '3':
+            # Logic for displaying business ideas
+            business_ideas = BusinessIdea.objects.all()
+            if business_ideas:
+                response = "END Business Ideas:\n"
+                for idx, idea in enumerate(business_ideas, start=1):
+                    response += f"{idx}. {idea.category}: {idea.idea}\n"
+            else:
+                response = "END No business ideas available\n"
+        elif text == '4':
             # Logic for requesting a loan
             response = "CON Enter the amount you want to request for a loan:\n"
         else:
